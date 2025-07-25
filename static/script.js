@@ -285,7 +285,7 @@ class MediaTracker {
                 const mediaId = e.dataTransfer.getData('text/plain');
                 const newStatus = column.id;
 
-                this.updateMediaStatus(mediaId, newStatus);
+                this.optimisticUpdateMediaStatus(mediaId, newStatus);
             });
         });
     }
@@ -585,7 +585,70 @@ class MediaTracker {
         }
     }
 
+    async optimisticUpdateMediaStatus(mediaId, newStatus) {
+        const media = this.media.find(m => m.id == mediaId);
+        if (!media) return;
+
+        // Store the original status for potential rollback
+        const originalStatus = media.status;
+        const originalIndex = this.media.indexOf(media);
+
+        // Remove the item from its current position
+        this.media.splice(originalIndex, 1);
+        
+        // Update the status
+        media.status = newStatus;
+        
+        // Add it to the end of the array (so it appears at the end of the destination column)
+        this.media.push(media);
+        
+        // Immediately update the UI (optimistic update)
+        this.renderMedia();
+        this.updateCounts();
+
+        // Add visual feedback that the update is in progress
+        const card = document.querySelector(`[data-media-id="${mediaId}"]`);
+        if (card) {
+            card.style.opacity = '0.7';
+            card.style.transition = 'opacity 0.3s ease';
+        }
+
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media/${mediaId}/${media.media_type}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: newStatus,
+                    watch_preference: media.watch_preference
+                })
+            });
+
+            if (response.ok) {
+                // Success - restore visual feedback
+                if (card) {
+                    card.style.opacity = '1';
+                }
+            } else {
+                // Failed - revert the optimistic update
+                media.status = originalStatus;
+                this.renderMedia();
+                this.updateCounts();
+                alert('Failed to update media status - changes reverted');
+            }
+        } catch (error) {
+            // Error - revert the optimistic update
+            console.error('Error updating media status:', error);
+            media.status = originalStatus;
+            this.renderMedia();
+            this.updateCounts();
+            alert('Failed to update media status - changes reverted');
+        }
+    }
+
     async updateMediaStatus(mediaId, newStatus) {
+        // This method is used for dropdown changes in details modal
         const media = this.media.find(m => m.id == mediaId);
         if (media) {
             try {
@@ -616,30 +679,42 @@ class MediaTracker {
 
     async updateMediaWatchPreference(mediaId, newPreference) {
         const media = this.media.find(m => m.id == mediaId);
-        if (media) {
-            try {
-                const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media/${mediaId}/${media.media_type}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        status: media.status,
-                        watch_preference: newPreference
-                    })
-                });
+        if (!media) return;
 
-                if (response.ok) {
-                    media.watch_preference = newPreference;
-                    this.renderMedia();
-                    this.updateCounts();
-                } else {
-                    alert('Failed to update watch preference');
-                }
-            } catch (error) {
-                console.error('Error updating watch preference:', error);
-                alert('Failed to update watch preference');
+        // Store the original preference for potential rollback
+        const originalPreference = media.watch_preference;
+
+        // Immediately update the UI (optimistic update)
+        media.watch_preference = newPreference;
+        this.renderMedia();
+        this.updateCounts();
+
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media/${mediaId}/${media.media_type}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: media.status,
+                    watch_preference: newPreference
+                })
+            });
+
+            if (!response.ok) {
+                // Failed - revert the optimistic update
+                media.watch_preference = originalPreference;
+                this.renderMedia();
+                this.updateCounts();
+                alert('Failed to update watch preference - changes reverted');
             }
+        } catch (error) {
+            // Error - revert the optimistic update
+            console.error('Error updating watch preference:', error);
+            media.watch_preference = originalPreference;
+            this.renderMedia();
+            this.updateCounts();
+            alert('Failed to update watch preference - changes reverted');
         }
     }
 

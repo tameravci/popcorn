@@ -172,7 +172,7 @@ def get_user_media(user_id):
         SELECT tmdb_id, media_type, media_data, added_date
         FROM media_items 
         WHERE user_id = ?
-        ORDER BY added_date DESC
+        ORDER BY added_date ASC
     ''', (user_id,))
     
     media_items = []
