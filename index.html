@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app">
+        <header class="header">
+            <h1><i class="fas fa-film"></i> Media Tracker</h1>
+            <button class="add-media-btn" id="addMediaBtn">
+                <i class="fas fa-plus"></i> Add Media
+            </button>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="filter-section">
+                    <h3>Filters</h3>
+
+                    <div class="filter-group">
+                        <label>Card Size</label>
+                        <select id="cardSize">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Type</label>
+                        <select id="mediaType">
+                            <option value="all">All</option>
+                            <option value="movie">Movies</option>
+                            <option value="tv">TV Shows</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Runtime</label>
+                        <select id="runtime">
+                            <option value="all">All</option>
+                            <option value="short">
+                                < 90 min</option>
+                            <option value="medium">90-150 min</option>
+                            <option value="long">> 150 min</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Watch Preference</label>
+                        <select id="watchPreference">
+                            <option value="all">All</option>
+                            <option value="alone">Watch Alone</option>
+                            <option value="partner">Watch with Partner</option>
+                        </select>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="kanban-board">
+                <div class="column" data-status="to-watch">
+                    <div class="column-header">
+                        <h2>To Watch</h2>
+                        <span class="count">0</span>
+                    </div>
+                    <div class="column-content" id="to-watch"></div>
+                </div>
+
+                <div class="column" data-status="in-progress">
+                    <div class="column-header">
+                        <h2>Shortlist</h2>
+                        <span class="count">0</span>
+                    </div>
+                    <div class="column-content" id="in-progress"></div>
+                </div>
+
+                <div class="column" data-status="watching">
+                    <div class="column-header">
+                        <h2>Watching</h2>
+                        <span class="count">0</span>
+                    </div>
+                    <div class="column-content" id="watching"></div>
+                </div>
+
+                <div class="column" data-status="waiting">
+                    <div class="column-header">
+                        <h2>Waiting for Season/Sequel</h2>
+                        <span class="count">0</span>
+                    </div>
+                    <div class="column-content" id="waiting"></div>
+                </div>
+
+                <div class="column" data-status="watched">
+                    <div class="column-header">
+                        <h2>Watched</h2>
+                        <span class="count">0</span>
+                    </div>
+                    <div class="column-content" id="watched"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Media Modal -->
+    <div class="modal" id="addMediaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Media</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search for movies or TV shows...">
+                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Details Modal -->
+    <div class="modal" id="mediaDetailsModal">
+        <div class="modal-content details-modal">
+            <div class="modal-header">
+                <h2>Media Details</h2>
+                <button class="close-btn" id="closeDetailsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="details-content" id="detailsContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
