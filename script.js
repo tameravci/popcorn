@@ -12,6 +12,22 @@ class MediaTracker {
         this.setupEventListeners();
         this.renderMedia();
         this.updateCounts();
+        this.handleMobileLayout();
+    }
+
+    handleMobileLayout() {
+        const checkMobile = () => {
+            const isMobile = window.innerWidth <= 768;
+
+            // Hide card size filter on mobile
+            const cardSizeFilter = document.querySelector('[data-filter="cardSize"]')?.closest('.filter-group');
+            if (cardSizeFilter) {
+                cardSizeFilter.style.display = isMobile ? 'none' : 'block';
+            }
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
     }
 
     setupEventListeners() {
@@ -52,25 +68,44 @@ class MediaTracker {
             }
         });
 
-        // Filters
-        document.getElementById('cardSize').addEventListener('change', (e) => {
-            this.updateCardSize(e.target.value);
-        });
-
-        document.getElementById('mediaType').addEventListener('change', () => {
-            this.applyFilters();
-        });
-
-        document.getElementById('runtime').addEventListener('change', () => {
-            this.applyFilters();
-        });
-
-        document.getElementById('watchPreference').addEventListener('change', () => {
-            this.applyFilters();
-        });
+        // Button-based filters
+        this.setupButtonFilters();
 
         // Drag and drop
         this.setupDragAndDrop();
+    }
+
+    setupButtonFilters() {
+        // Handle all filter button clicks
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const button = e.currentTarget;
+                const buttonGroup = button.closest('.button-group');
+                const filterType = buttonGroup.dataset.filter;
+                const value = button.dataset.value;
+
+                // Remove active class from all buttons in this group
+                buttonGroup.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+
+                // Add active class to clicked button
+                button.classList.add('active');
+
+                // Handle different filter types
+                if (filterType === 'cardSize') {
+                    this.updateCardSize(value);
+                } else {
+                    this.applyFilters();
+                }
+            });
+        });
+    }
+
+    getActiveFilterValue(filterType) {
+        const buttonGroup = document.querySelector(`[data-filter="${filterType}"]`);
+        const activeButton = buttonGroup?.querySelector('.filter-btn.active');
+        return activeButton?.dataset.value || 'all';
     }
 
     setupDragAndDrop() {
@@ -362,6 +397,8 @@ class MediaTracker {
 
         this.media.push(mediaItem);
         this.saveMedia();
+        console.log('Added media item:', mediaItem);
+        console.log('Total media items:', this.media.length);
         this.renderMedia();
         this.updateCounts();
         this.closeModal();
@@ -388,6 +425,7 @@ class MediaTracker {
     }
 
     renderMedia() {
+        // Desktop kanban view
         const columns = {
             'to-watch': document.getElementById('to-watch'),
             'in-progress': document.getElementById('in-progress'),
@@ -401,20 +439,59 @@ class MediaTracker {
             column.innerHTML = '';
         });
 
+        // Mobile list view
+        const mobileListView = document.getElementById('mobileListView');
+        if (mobileListView) {
+            mobileListView.innerHTML = '';
+        }
+
         // Apply filters
         const filteredMedia = this.getFilteredMedia();
+        console.log('Rendering media:', filteredMedia.length, 'items');
+        console.log('Mobile list view element:', mobileListView);
 
-        // Render cards
+        // Render for both desktop and mobile
         filteredMedia.forEach(item => {
+            // Desktop kanban cards
             const card = this.createMediaCard(item);
             columns[item.status].appendChild(card);
+
+            // Mobile list items
+            if (mobileListView) {
+                const mobileItem = this.createMobileMediaItem(item);
+                console.log('Created mobile item for:', item.title);
+                mobileListView.appendChild(mobileItem);
+            }
         });
+
+        console.log('Mobile list view children after render:', mobileListView?.children.length);
+        
+        // Debug: Check if mobile list view is visible and force show it on mobile
+        if (mobileListView) {
+            const styles = window.getComputedStyle(mobileListView);
+            console.log('Mobile list view display:', styles.display);
+            console.log('Mobile list view visibility:', styles.visibility);
+            console.log('Mobile list view height:', styles.height);
+            
+            // Force show on mobile for debugging
+            if (window.innerWidth <= 768) {
+                mobileListView.style.display = 'block';
+                mobileListView.style.visibility = 'visible';
+                mobileListView.style.backgroundColor = '#ff0000'; // Red background for debugging
+                console.log('Forced mobile list view to be visible');
+                
+                // Add a test item if no items exist
+                if (mobileListView.children.length === 0 && this.media.length === 0) {
+                    mobileListView.innerHTML = '<div style="color: white; padding: 20px; background: #333; margin: 10px; border-radius: 8px;">TEST: Mobile list view is working! Add some media to see items here.</div>';
+                }
+            }
+        }
     }
 
     getFilteredMedia() {
-        const mediaType = document.getElementById('mediaType').value;
-        const runtime = document.getElementById('runtime').value;
-        const watchPreference = document.getElementById('watchPreference').value;
+        const mediaType = this.getActiveFilterValue('mediaType');
+        const runtime = this.getActiveFilterValue('runtime');
+        const watchPreference = this.getActiveFilterValue('watchPreference');
 
         return this.media.filter(item => {
             // Media type filter
@@ -514,6 +591,70 @@ class MediaTracker {
         });
 
         return card;
+    }
+
+    createMobileMediaItem(item) {
+        const mobileItem = document.createElement('div');
+        mobileItem.className = 'mobile-media-item';
+        mobileItem.dataset.mediaId = item.id;
+
+        const posterUrl = item.poster_path ? `${this.imageBaseUrl}${item.poster_path}` : null;
+        const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+        const duration = this.formatDuration(item.runtime);
+        const mediaTypeLabel = item.media_type === 'movie' ? 'Movie' : 'TV';
+
+        // Format status for display
+        const statusLabels = {
+            'to-watch': 'To Watch',
+            'in-progress': 'In Progress',
+            'watching': 'Watching',
+            'waiting': 'Waiting for Season',
+            'watched': 'Watched'
+        };
+
+        // Show duration for movies, season count for TV shows
+        let metaInfo = '';
+        if (item.media_type === 'movie' && duration !== 'N/A') {
+            metaInfo = `
+                <div class="mobile-meta-item">
+                    <i class="fas fa-clock"></i>
+                    ${duration}
+                </div>
+            `;
+        } else if (item.media_type === 'tv' && item.seasons > 0) {
+            const seasonText = item.seasons === 1 ? 'Season' : 'Seasons';
+            metaInfo = `
+                <div class="mobile-meta-item">
+                    <i class="fas fa-tv"></i>
+                    ${item.seasons} ${seasonText}
+                </div>
+            `;
+        }
+
+        mobileItem.innerHTML = `
+            <div class="mobile-poster">
+                ${posterUrl ? `<img src="${posterUrl}" alt="${item.title}">` : '<i class="fas fa-film placeholder"></i>'}
+                <div class="mobile-type-badge">${mediaTypeLabel}</div>
+            </div>
+            <div class="mobile-info">
+                <div class="mobile-title">${item.title}</div>
+                <div class="mobile-meta">
+                    <div class="mobile-status-badge ${item.status}">${statusLabels[item.status]}</div>
+                    ${metaInfo}
+                    <div class="mobile-rating">
+                        <i class="fas fa-star"></i>
+                        ${rating}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Click event for details
+        mobileItem.addEventListener('click', () => {
+            this.showMediaDetails(item);
+        });
+
+        return mobileItem;
     }
 
     formatDuration(minutes) {

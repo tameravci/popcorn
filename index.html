@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Tracker</title>
+    <title>Popcorn</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -12,7 +13,7 @@
 <body>
     <div class="app">
         <header class="header">
-            <h1><i class="fas fa-film"></i> Media Tracker</h1>
+            <h1><i class="fas fa-film"></i>Popcorn 🍿</h1>
             <button class="add-media-btn" id="addMediaBtn">
                 <i class="fas fa-plus"></i> Add Media
             </button>
@@ -90,7 +91,7 @@
 
                 <div class="column" data-status="waiting">
                     <div class="column-header">
-                        <h2>Waiting for Season/Sequel</h2>
+                        <h2>Waiting for New Season/Sequel</h2>
                         <span class="count">0</span>
                     </div>
                     <div class="column-content" id="waiting"></div>
@@ -104,6 +105,11 @@
                     <div class="column-content" id="watched"></div>
                 </div>
             </main>
+
+            <!-- Mobile List View -->
+            <div class="mobile-list-view" id="mobileListView">
+                <!-- Mobile media items will be populated by JavaScript -->
+            </div>
         </div>
     </div>
 
