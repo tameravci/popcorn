@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Popcorn</title>
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
@@ -162,7 +162,31 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- User Selection Modal -->
+    <div class="modal active" id="userSelectionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🍿 Welcome to Popcorn</h2>
+            </div>
+            <div class="modal-body">
+                <div class="user-selection">
+                    <h3>Select or Create User</h3>
+                    <div class="existing-users" id="existingUsers">
+                        <!-- Users will be populated by JavaScript -->
+                    </div>
+                    <div class="create-user-section">
+                        <h4>Or Create New User</h4>
+                        <div class="create-user-form">
+                            <input type="text" id="newUserName" placeholder="Enter your name..." maxlength="50">
+                            <button id="createUserBtn">Create User</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 
 </html>

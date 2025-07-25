@@ -1,18 +1,169 @@
 class MediaTracker {
     constructor() {
-        this.apiKey = 'df3e498937ba9d64ad9c717f1a7f7792';
-        this.baseUrl = 'https://api.themoviedb.org/3';
+        this.baseUrl = '/api';
         this.imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
-        this.media = JSON.parse(localStorage.getItem('mediaTracker') || '[]');
+        this.currentUser = null;
+        this.media = [];
 
         this.init();
     }
 
-    init() {
+    async init() {
+        await this.showUserSelection();
         this.setupEventListeners();
+        this.handleMobileLayout();
+    }
+
+    // User Management
+    async showUserSelection() {
+        const modal = document.getElementById('userSelectionModal');
+        modal.classList.add('active');
+        
+        await this.loadExistingUsers();
+        this.setupUserSelectionListeners();
+    }
+
+    async loadExistingUsers() {
+        try {
+            const response = await fetch(`${this.baseUrl}/users`);
+            const users = await response.json();
+            
+            const existingUsersContainer = document.getElementById('existingUsers');
+            
+            if (users.length === 0) {
+                existingUsersContainer.innerHTML = '<div class="no-users-message">No users found. Create your first user below!</div>';
+            } else {
+                existingUsersContainer.innerHTML = users.map(user => `
+                    <div class="user-card" data-user-id="${user.id}">
+                        <i class="fas fa-user"></i>
+                        <span>${user.name}</span>
+                    </div>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            document.getElementById('existingUsers').innerHTML = '<div class="no-users-message">Error loading users. Please refresh the page.</div>';
+        }
+    }
+
+    setupUserSelectionListeners() {
+        // Handle existing user selection
+        document.getElementById('existingUsers').addEventListener('click', (e) => {
+            const userCard = e.target.closest('.user-card');
+            if (userCard) {
+                const userId = parseInt(userCard.dataset.userId);
+                const userName = userCard.querySelector('span').textContent;
+                this.selectUser(userId, userName);
+            }
+        });
+
+        // Handle new user creation
+        const createUserBtn = document.getElementById('createUserBtn');
+        const newUserNameInput = document.getElementById('newUserName');
+
+        createUserBtn.addEventListener('click', () => {
+            this.createNewUser();
+        });
+
+        newUserNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.createNewUser();
+            }
+        });
+
+        newUserNameInput.addEventListener('input', (e) => {
+            createUserBtn.disabled = !e.target.value.trim();
+        });
+    }
+
+    async createNewUser() {
+        const nameInput = document.getElementById('newUserName');
+        const name = nameInput.value.trim();
+        
+        if (!name) {
+            alert('Please enter a name');
+            return;
+        }
+
+        const createUserBtn = document.getElementById('createUserBtn');
+        createUserBtn.disabled = true;
+        createUserBtn.textContent = 'Creating...';
+
+        try {
+            const response = await fetch(`${this.baseUrl}/users`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name })
+            });
+
+            if (response.ok) {
+                const user = await response.json();
+                this.selectUser(user.id, user.name);
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Failed to create user');
+            }
+        } catch (error) {
+            console.error('Error creating user:', error);
+            alert('Failed to create user. Please try again.');
+        } finally {
+            createUserBtn.disabled = false;
+            createUserBtn.textContent = 'Create User';
+        }
+    }
+
+    async selectUser(userId, userName) {
+        this.currentUser = { id: userId, name: userName };
+        
+        // Hide user selection modal
+        document.getElementById('userSelectionModal').classList.remove('active');
+        
+        // Update header to show current user
+        document.querySelector('.header h1').innerHTML = `<i class="fas fa-film"></i> Popcorn - ${userName}`;
+        
+        // Load user's media and preferences
+        await this.loadUserData();
+        
+        // Initialize the rest of the app
         this.renderMedia();
         this.updateCounts();
-        this.handleMobileLayout();
+    }
+
+    async loadUserData() {
+        try {
+            // Load user's media
+            const mediaResponse = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media`);
+            this.media = await mediaResponse.json();
+
+            // Load user preferences
+            const prefsResponse = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/preferences`);
+            const preferences = await prefsResponse.json();
+            
+            // Apply preferences to UI
+            this.applyUserPreferences(preferences);
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        }
+    }
+
+    applyUserPreferences(preferences) {
+        // Set card size
+        const cardSizeButtons = document.querySelectorAll('[data-filter="cardSize"] .filter-btn');
+        cardSizeButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === preferences.card_size);
+        });
+        this.updateCardSize(preferences.card_size);
+
+        // Set default watch preference
+        const watchPrefButtons = document.querySelectorAll('[data-filter="watchPreference"] .filter-btn');
+        watchPrefButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === preferences.default_watch_preference);
+        });
+        
+        // Apply filters to show the correct content
+        this.applyFilters();
     }
 
     handleMobileLayout() {
@@ -95,6 +246,10 @@ class MediaTracker {
                 // Handle different filter types
                 if (filterType === 'cardSize') {
                     this.updateCardSize(value);
+                    this.saveUserPreferences(); // Save card size preference
+                } else if (filterType === 'watchPreference') {
+                    this.applyFilters();
+                    this.saveUserPreferences(); // Save watch preference
                 } else {
                     this.applyFilters();
                 }
@@ -160,8 +315,8 @@ class MediaTracker {
         try {
             // Fetch detailed information
             const [detailsResponse, creditsResponse] = await Promise.all([
-                fetch(`${this.baseUrl}/${item.media_type}/${item.id}?api_key=${this.apiKey}`),
-                fetch(`${this.baseUrl}/${item.media_type}/${item.id}/credits?api_key=${this.apiKey}`)
+                fetch(`${this.baseUrl}/media/${item.media_type}/${item.id}`),
+                fetch(`${this.baseUrl}/media/${item.media_type}/${item.id}/credits`)
             ]);
 
             const details = await detailsResponse.json();
@@ -293,13 +448,25 @@ class MediaTracker {
         });
     }
 
-    removeMedia(mediaId, mediaType) {
+    async removeMedia(mediaId, mediaType) {
         if (confirm('Are you sure you want to remove this item from your tracker?')) {
-            this.media = this.media.filter(m => !(m.id == mediaId && m.media_type === mediaType));
-            this.saveMedia();
-            this.renderMedia();
-            this.updateCounts();
-            this.closeDetailsModal();
+            try {
+                const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media/${mediaId}/${mediaType}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    this.media = this.media.filter(m => !(m.id == mediaId && m.media_type === mediaType));
+                    this.renderMedia();
+                    this.updateCounts();
+                    this.closeDetailsModal();
+                } else {
+                    alert('Failed to remove media');
+                }
+            } catch (error) {
+                console.error('Error removing media:', error);
+                alert('Failed to remove media');
+            }
         }
     }
 
@@ -311,9 +478,7 @@ class MediaTracker {
         resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
 
         try {
-            const response = await fetch(
-                `${this.baseUrl}/search/multi?api_key=${this.apiKey}&query=${encodeURIComponent(query)}`
-            );
+            const response = await fetch(`${this.baseUrl}/search?query=${encodeURIComponent(query)}`);
             const data = await response.json();
 
             this.displaySearchResults(data.results);
@@ -372,16 +537,14 @@ class MediaTracker {
         // Get additional details
         let details = {};
         try {
-            const response = await fetch(
-                `${this.baseUrl}/${item.media_type}/${item.id}?api_key=${this.apiKey}`
-            );
+            const response = await fetch(`${this.baseUrl}/media/${item.media_type}/${item.id}`);
             details = await response.json();
         } catch (error) {
             console.error('Error fetching details:', error);
         }
 
         const mediaItem = {
-            id: item.id,
+            tmdb_id: item.id,
             media_type: item.media_type,
             title: item.title || item.name,
             poster_path: item.poster_path,
@@ -391,34 +554,92 @@ class MediaTracker {
             runtime: details.runtime || (details.episode_run_time && details.episode_run_time[0]) || 0,
             seasons: details.number_of_seasons || 0,
             status: 'to-watch',
-            watch_preference: 'alone',
-            added_date: new Date().toISOString()
+            watch_preference: this.getActiveFilterValue('watchPreference') || 'all'
         };
 
-        this.media.push(mediaItem);
-        this.saveMedia();
-        this.renderMedia();
-        this.updateCounts();
-        this.closeModal();
-    }
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(mediaItem)
+            });
 
-    updateMediaStatus(mediaId, newStatus) {
-        const media = this.media.find(m => m.id == mediaId);
-        if (media) {
-            media.status = newStatus;
-            this.saveMedia();
-            this.renderMedia();
-            this.updateCounts();
+            if (response.ok) {
+                // Add to local array for immediate UI update
+                this.media.push({
+                    id: item.id,
+                    ...mediaItem
+                });
+                this.renderMedia();
+                this.updateCounts();
+                this.closeModal();
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Failed to add media');
+            }
+        } catch (error) {
+            console.error('Error adding media:', error);
+            alert('Failed to add media. Please try again.');
         }
     }
 
-    updateMediaWatchPreference(mediaId, newPreference) {
+    async updateMediaStatus(mediaId, newStatus) {
         const media = this.media.find(m => m.id == mediaId);
         if (media) {
-            media.watch_preference = newPreference;
-            this.saveMedia();
-            this.renderMedia();
-            this.updateCounts();
+            try {
+                const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media/${mediaId}/${media.media_type}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: newStatus,
+                        watch_preference: media.watch_preference
+                    })
+                });
+
+                if (response.ok) {
+                    media.status = newStatus;
+                    this.renderMedia();
+                    this.updateCounts();
+                } else {
+                    alert('Failed to update media status');
+                }
+            } catch (error) {
+                console.error('Error updating media status:', error);
+                alert('Failed to update media status');
+            }
+        }
+    }
+
+    async updateMediaWatchPreference(mediaId, newPreference) {
+        const media = this.media.find(m => m.id == mediaId);
+        if (media) {
+            try {
+                const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media/${mediaId}/${media.media_type}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: media.status,
+                        watch_preference: newPreference
+                    })
+                });
+
+                if (response.ok) {
+                    media.watch_preference = newPreference;
+                    this.renderMedia();
+                    this.updateCounts();
+                } else {
+                    alert('Failed to update watch preference');
+                }
+            } catch (error) {
+                console.error('Error updating watch preference:', error);
+                alert('Failed to update watch preference');
+            }
         }
     }
 
@@ -690,8 +911,26 @@ class MediaTracker {
         this.updateCounts();
     }
 
-    saveMedia() {
-        localStorage.setItem('mediaTracker', JSON.stringify(this.media));
+    async saveUserPreferences() {
+        if (!this.currentUser) return;
+        
+        const cardSize = this.getActiveFilterValue('cardSize');
+        const defaultWatchPreference = this.getActiveFilterValue('watchPreference');
+        
+        try {
+            await fetch(`${this.baseUrl}/users/${this.currentUser.id}/preferences`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    card_size: cardSize,
+                    default_watch_preference: defaultWatchPreference
+                })
+            });
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+        }
     }
 }
 

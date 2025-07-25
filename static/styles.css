@@ -652,6 +652,115 @@ body {
     font-size: 0.8rem;
 }
 
+/* User Selection Modal */
+.user-selection {
+    text-align: center;
+}
+
+.user-selection h3 {
+    color: #e50914;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+}
+
+.user-selection h4 {
+    color: #fff;
+    margin: 2rem 0 1rem 0;
+    font-size: 1rem;
+}
+
+.existing-users {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.user-card {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.user-card:hover {
+    background: #333;
+    border-color: #e50914;
+    transform: translateY(-1px);
+}
+
+.user-card i {
+    color: #e50914;
+    font-size: 1.2rem;
+}
+
+.user-card span {
+    font-weight: 500;
+    color: #fff;
+}
+
+.create-user-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.create-user-form input {
+    flex: 1;
+    max-width: 300px;
+    padding: 0.75rem;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.create-user-form input:focus {
+    outline: none;
+    border-color: #e50914;
+}
+
+.create-user-form button {
+    padding: 0.75rem 1.5rem;
+    background: #e50914;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.create-user-form button:hover {
+    background: #b8070f;
+    transform: translateY(-1px);
+}
+
+.create-user-form button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.no-users-message {
+    color: #ccc;
+    font-style: italic;
+    padding: 2rem;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px dashed #444;
+}
+
 /* Mobile List View Styles */
 .mobile-list-view {
     display: none;
