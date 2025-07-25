@@ -22,44 +22,61 @@
         <div class="main-content">
             <aside class="sidebar">
                 <div class="filter-section">
-                    <h3>Filters</h3>
-
                     <div class="filter-group">
-                        <label>Card Size</label>
-                        <select id="cardSize">
-                            <option value="small">Small</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="large">Large</option>
-                        </select>
+                        <div class="filter-header">
+                            <i class="fas fa-th"></i>
+                            <label>Card Size</label>
+                        </div>
+                        <div class="button-group" data-filter="cardSize">
+                            <button class="filter-btn" data-value="small">S</button>
+                            <button class="filter-btn active" data-value="medium">M</button>
+                            <button class="filter-btn" data-value="large">L</button>
+                        </div>
                     </div>
 
                     <div class="filter-group">
-                        <label>Type</label>
-                        <select id="mediaType">
-                            <option value="all">All</option>
-                            <option value="movie">Movies</option>
-                            <option value="tv">TV Shows</option>
-                        </select>
+                        <div class="filter-header">
+                            <i class="fas fa-film"></i>
+                            <label>Type</label>
+                        </div>
+                        <div class="button-group" data-filter="mediaType">
+                            <button class="filter-btn active" data-value="all">All</button>
+                            <button class="filter-btn" data-value="movie">
+                                <i class="fas fa-video"></i> Movies
+                            </button>
+                            <button class="filter-btn" data-value="tv">
+                                <i class="fas fa-tv"></i> Shows
+                            </button>
+                        </div>
                     </div>
 
                     <div class="filter-group">
-                        <label>Runtime</label>
-                        <select id="runtime">
-                            <option value="all">All</option>
-                            <option value="short">
-                                < 90 min</option>
-                            <option value="medium">90-150 min</option>
-                            <option value="long">> 150 min</option>
-                        </select>
+                        <div class="filter-header">
+                            <i class="fas fa-clock"></i>
+                            <label>Runtime</label>
+                        </div>
+                        <div class="button-group" data-filter="runtime">
+                            <button class="filter-btn active" data-value="all">All</button>
+                            <button class="filter-btn" data-value="short">Short</button>
+                            <button class="filter-btn" data-value="medium">Medium</button>
+                            <button class="filter-btn" data-value="long">Long</button>
+                        </div>
                     </div>
 
                     <div class="filter-group">
-                        <label>Watch Preference</label>
-                        <select id="watchPreference">
-                            <option value="all">All</option>
-                            <option value="alone">Watch Alone</option>
-                            <option value="partner">Watch with Partner</option>
-                        </select>
+                        <div class="filter-header">
+                            <i class="fas fa-users"></i>
+                            <label>Watch With</label>
+                        </div>
+                        <div class="button-group" data-filter="watchPreference">
+                            <button class="filter-btn active" data-value="all">All</button>
+                            <button class="filter-btn" data-value="alone">
+                                <i class="fas fa-user"></i> Alone
+                            </button>
+                            <button class="filter-btn" data-value="partner">
+                                <i class="fas fa-user-friends"></i> Partner
+                            </button>
+                        </div>
                     </div>
                 </div>
             </aside>

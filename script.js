@@ -265,7 +265,7 @@ class MediaTracker {
                     <div class="details-actions">
                         <select class="status-select" id="detailsStatusSelect">
                             <option value="to-watch" ${item.status === 'to-watch' ? 'selected' : ''}>To Watch</option>
-                            <option value="in-progress" ${item.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="in-progress" ${item.status === 'in-progress' ? 'selected' : ''}>Shortlist</option>
                             <option value="watching" ${item.status === 'watching' ? 'selected' : ''}>Watching</option>
                             <option value="waiting" ${item.status === 'waiting' ? 'selected' : ''}>Waiting for Season</option>
                             <option value="watched" ${item.status === 'watched' ? 'selected' : ''}>Watched</option>
@@ -397,8 +397,6 @@ class MediaTracker {
 
         this.media.push(mediaItem);
         this.saveMedia();
-        console.log('Added media item:', mediaItem);
-        console.log('Total media items:', this.media.length);
         this.renderMedia();
         this.updateCounts();
         this.closeModal();
@@ -447,8 +445,6 @@ class MediaTracker {
 
         // Apply filters
         const filteredMedia = this.getFilteredMedia();
-        console.log('Rendering media:', filteredMedia.length, 'items');
-        console.log('Mobile list view element:', mobileListView);
 
         // Render for both desktop and mobile
         filteredMedia.forEach(item => {
@@ -459,19 +455,13 @@ class MediaTracker {
             // Mobile list items
             if (mobileListView) {
                 const mobileItem = this.createMobileMediaItem(item);
-                console.log('Created mobile item for:', item.title);
                 mobileListView.appendChild(mobileItem);
             }
         });
-
-        console.log('Mobile list view children after render:', mobileListView?.children.length);
         
         // Debug: Check if mobile list view is visible and force show it on mobile
         if (mobileListView) {
             const styles = window.getComputedStyle(mobileListView);
-            console.log('Mobile list view display:', styles.display);
-            console.log('Mobile list view visibility:', styles.visibility);
-            console.log('Mobile list view height:', styles.height);
             
             // Force show on mobile for debugging
             if (window.innerWidth <= 768) {
@@ -606,7 +596,7 @@ class MediaTracker {
         // Format status for display
         const statusLabels = {
             'to-watch': 'To Watch',
-            'in-progress': 'In Progress',
+            'in-progress': 'Shortlist',
             'watching': 'Watching',
             'waiting': 'Waiting for Season',
             'watched': 'Watched'
