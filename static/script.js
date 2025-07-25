@@ -121,7 +121,7 @@ class MediaTracker {
         document.getElementById('userSelectionModal').classList.remove('active');
         
         // Update header to show current user
-        document.querySelector('.header h1').innerHTML = `<i class="fas fa-film"></i> Popcorn - ${userName}`;
+        document.querySelector('.header h1').innerHTML = `🍿 Popcorn - ${userName}`;
         
         // Load user's media and preferences
         await this.loadUserData();
@@ -759,18 +759,7 @@ class MediaTracker {
         if (mobileListView) {
             const styles = window.getComputedStyle(mobileListView);
             
-            // Force show on mobile for debugging
-            if (window.innerWidth <= 768) {
-                mobileListView.style.display = 'block';
-                mobileListView.style.visibility = 'visible';
-                mobileListView.style.backgroundColor = '#ff0000'; // Red background for debugging
-                console.log('Forced mobile list view to be visible');
-                
-                // Add a test item if no items exist
-                if (mobileListView.children.length === 0 && this.media.length === 0) {
-                    mobileListView.innerHTML = '<div style="color: white; padding: 20px; background: #333; margin: 10px; border-radius: 8px;">TEST: Mobile list view is working! Add some media to see items here.</div>';
-                }
-            }
+
         }
     }
 
@@ -935,9 +924,21 @@ class MediaTracker {
             </div>
         `;
 
-        // Click event for details
-        mobileItem.addEventListener('click', () => {
+        // Touch-friendly click event for details
+        mobileItem.addEventListener('click', (e) => {
+            e.preventDefault();
             this.showMediaDetails(item);
+        });
+
+        // Add touch feedback
+        mobileItem.addEventListener('touchstart', () => {
+            mobileItem.style.transform = 'scale(0.98)';
+        });
+
+        mobileItem.addEventListener('touchend', () => {
+            setTimeout(() => {
+                mobileItem.style.transform = 'scale(1)';
+            }, 150);
         });
 
         return mobileItem;
