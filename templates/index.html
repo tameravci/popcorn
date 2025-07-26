@@ -14,9 +14,14 @@
     <div class="app">
         <header class="header">
             <h1><i class="fas fa-film"></i>Popcorn 🍿</h1>
-            <button class="add-media-btn" id="addMediaBtn">
-                <i class="fas fa-plus"></i> Add Media
-            </button>
+            <div class="header-actions">
+                <button class="switch-user-btn" id="switchUserBtn" title="Switch User">
+                    <i class="fas fa-user-friends"></i>
+                </button>
+                <button class="add-media-btn" id="addMediaBtn">
+                    <i class="fas fa-plus"></i> Add Media
+                </button>
+            </div>
         </header>
 
         <div class="main-content">
@@ -175,7 +180,7 @@
                         <!-- Users will be populated by JavaScript -->
                     </div>
                     <div class="create-user-section">
-                        <h4>Or Create New User</h4>
+                        <h4>Create New User</h4>
                         <div class="create-user-form">
                             <input type="text" id="newUserName" placeholder="Enter your name..." maxlength="50">
                             <button id="createUserBtn">Create User</button>

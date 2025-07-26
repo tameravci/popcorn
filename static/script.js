@@ -131,6 +131,26 @@ class MediaTracker {
         this.updateCounts();
     }
 
+    switchUser() {
+        // Clear current user data
+        this.currentUser = null;
+        this.media = [];
+        
+        // Clear the UI
+        this.renderMedia();
+        this.updateCounts();
+        
+        // Reset header
+        document.querySelector('.header h1').innerHTML = `🍿 Popcorn`;
+        
+        // Clear any open modals
+        document.getElementById('addMediaModal').classList.remove('active');
+        document.getElementById('mediaDetailsModal').classList.remove('active');
+        
+        // Show user selection modal again
+        this.showUserSelection();
+    }
+
     async loadUserData() {
         try {
             // Load user's media
@@ -221,6 +241,14 @@ class MediaTracker {
 
         // Button-based filters
         this.setupButtonFilters();
+
+        // Switch user button
+        const switchUserBtn = document.getElementById('switchUserBtn');
+        if (switchUserBtn) {
+            switchUserBtn.addEventListener('click', () => {
+                this.switchUser();
+            });
+        }
 
         // Drag and drop
         this.setupDragAndDrop();
@@ -593,14 +621,20 @@ class MediaTracker {
         const originalStatus = media.status;
         const originalIndex = this.media.indexOf(media);
 
-        // Remove the item from its current position
-        this.media.splice(originalIndex, 1);
-        
-        // Update the status
-        media.status = newStatus;
-        
-        // Add it to the end of the array (so it appears at the end of the destination column)
-        this.media.push(media);
+        // Only reorder if the status is actually changing (moved to different column)
+        if (originalStatus !== newStatus) {
+            // Remove the item from its current position
+            this.media.splice(originalIndex, 1);
+            
+            // Update the status
+            media.status = newStatus;
+            
+            // Add it to the end of the array (so it appears at the end of the destination column)
+            this.media.push(media);
+        } else {
+            // Same column - just update status (no reordering needed)
+            media.status = newStatus;
+        }
         
         // Immediately update the UI (optimistic update)
         this.renderMedia();

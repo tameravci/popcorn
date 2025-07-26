@@ -37,6 +37,34 @@ body {
     margin-right: 0.5rem;
 }
 
+.header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.switch-user-btn {
+    background: #333;
+    color: #ccc;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.switch-user-btn:hover {
+    background: #444;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
 .add-media-btn {
     background: #e50914;
     color: white;
@@ -926,6 +954,18 @@ body {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        flex: 1;
+    }
+    
+    .header-actions {
+        gap: 0.5rem;
+    }
+    
+    .switch-user-btn {
+        width: 40px;
+        height: 40px;
+        padding: 0.5rem;
+        font-size: 0.8rem;
     }
     
     .add-media-btn {
