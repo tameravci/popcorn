@@ -594,6 +594,9 @@ class MediaTracker {
             console.error('Error fetching details:', error);
         }
 
+        // Get the selected status from the add media modal
+        const selectedStatus = document.getElementById('addStatusSelect')?.value || 'to-watch';
+
         const mediaItem = {
             tmdb_id: item.id,
             media_type: item.media_type,
@@ -604,7 +607,7 @@ class MediaTracker {
             release_date: item.release_date || item.first_air_date,
             runtime: details.runtime || (details.episode_run_time && details.episode_run_time[0]) || 0,
             seasons: details.number_of_seasons || 0,
-            status: 'to-watch',
+            status: selectedStatus,
             watch_preference: this.getActiveFilterValue('watchPreference') || 'all'
         };
 

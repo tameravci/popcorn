@@ -436,7 +436,7 @@ body {
 .search-container {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .search-container input {
@@ -466,6 +466,40 @@ body {
 
 .search-container button:hover {
     background: #b8070f;
+}
+
+.add-status-selection {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem;
+    background: #2a2a2a;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.add-status-selection label {
+    color: #ccc;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.add-status-selection select {
+    flex: 1;
+    padding: 0.5rem;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.add-status-selection select:focus {
+    outline: none;
+    border-color: #e50914;
 }
 
 .search-results {
@@ -1293,6 +1327,22 @@ body {
     
     .search-container button {
         width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+    
+    .add-status-selection {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+    
+    .add-status-selection label {
+        font-size: 1rem;
+    }
+    
+    .add-status-selection select {
         padding: 0.75rem;
         font-size: 1rem;
     }
