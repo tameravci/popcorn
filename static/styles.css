@@ -309,6 +309,29 @@ body {
 }
 
 /* Card Sizes */
+.card-size-xs .card-poster {
+    height: 100px;
+}
+
+.card-size-xs .card-info {
+    padding: 0.4rem;
+}
+
+.card-size-xs .card-title {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+    line-height: 1.2;
+}
+
+.card-size-xs .card-meta {
+    font-size: 0.65rem;
+}
+
+.card-size-xs .media-type-badge {
+    font-size: 0.55rem;
+    padding: 0.15rem 0.3rem;
+}
+
 .card-size-small .card-poster {
     height: 120px;
 }
