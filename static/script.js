@@ -228,13 +228,19 @@ class MediaTracker {
             }
         });
 
-        // Search functionality
+        // Search functionality with debouncing
         document.getElementById('searchBtn').addEventListener('click', () => {
             this.searchMedia();
         });
 
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            this.handleSearchInput(e.target.value);
+        });
+
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                // Clear debounce timer and search immediately on Enter
+                clearTimeout(this.searchTimeout);
                 this.searchMedia();
             }
         });
@@ -498,12 +504,29 @@ class MediaTracker {
         }
     }
 
+    handleSearchInput(query) {
+        // Clear any existing timeout
+        clearTimeout(this.searchTimeout);
+        
+        const resultsContainer = document.getElementById('searchResults');
+        
+        // Clear results if query is too short
+        if (query.length < 3) {
+            resultsContainer.innerHTML = '';
+            return;
+        }
+        
+        // Set new timeout for debounced search
+        this.searchTimeout = setTimeout(() => {
+            this.searchMedia();
+        }, 400);
+    }
+
     async searchMedia() {
         const query = document.getElementById('searchInput').value.trim();
-        if (!query) return;
+        if (!query || query.length < 3) return;
 
         const resultsContainer = document.getElementById('searchResults');
-        resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
 
         try {
             const response = await fetch(`${this.baseUrl}/search?query=${encodeURIComponent(query)}`);
