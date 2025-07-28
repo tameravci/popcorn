@@ -13,7 +13,7 @@
 <body>
     <div class="app">
         <header class="header">
-            <h1><i class="fas fa-film"></i>Popcorn 🍿</h1>
+            <h1 class="header-title" onclick="window.location.reload()"><i class="fas fa-film"></i>Popcorn 🍿</h1>
             <div class="header-actions">
                 <button class="switch-user-btn" id="switchUserBtn" title="Switch User">
                     <i class="fas fa-user-friends"></i>
@@ -163,6 +163,58 @@
             <div class="modal-body">
                 <div class="details-content" id="detailsContent">
                     <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy to User Modal -->
+    <div class="modal" id="copyToUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Copy to User</h2>
+                <button class="close-btn" id="closeCopyToUserModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="copy-to-user-content">
+                    <div class="copy-item-preview" id="copyItemPreview">
+                        <!-- Item preview will be populated by JavaScript -->
+                    </div>
+                    <div class="copy-user-selection">
+                        <h3>Select User</h3>
+                        <div class="copy-users-list" id="copyUsersList">
+                            <!-- Users will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="copy-options" id="copyOptions" style="display: none;">
+                        <h3>Choose Destination</h3>
+                        <div class="copy-status-selection">
+                            <label for="copyStatusSelect">Add to:</label>
+                            <select id="copyStatusSelect" class="status-select">
+                                <option value="to-watch">To Watch</option>
+                                <option value="in-progress">Shortlist</option>
+                                <option value="watching">Watching</option>
+                                <option value="waiting">Waiting for Season</option>
+                                <option value="watched">Watched</option>
+                            </select>
+                        </div>
+                        <div class="copy-preference-selection">
+                            <label for="copyPreferenceSelect">Watch preference:</label>
+                            <select id="copyPreferenceSelect" class="status-select">
+                                <option value="all">All</option>
+                                <option value="alone">Watch Alone</option>
+                                <option value="partner">Watch with Partner</option>
+                            </select>
+                        </div>
+                        <div class="copy-actions">
+                            <button class="btn btn-primary" id="confirmCopyBtn">
+                                <i class="fas fa-copy"></i> Copy Item
+                            </button>
+                            <button class="btn btn-secondary" id="cancelCopyBtn">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

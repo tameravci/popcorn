@@ -461,6 +461,11 @@ class MediaTracker {
                 `<img src="${posterUrl}" alt="${item.title}">` :
                 '<div class="placeholder"><i class="fas fa-film"></i></div>'
             }
+                    <div class="poster-actions">
+                        <button class="share-user-btn" id="copyToUserBtn">
+                            <i class="fas fa-user-plus"></i> Add to Another User
+                        </button>
+                    </div>
                 </div>
                 <div class="details-info">
                     <h1 class="details-title">${item.title}</h1>
@@ -503,7 +508,7 @@ class MediaTracker {
 
                     <div class="move-instructions orange">
                         <i class="fas fa-exclamation-triangle"></i>
-                        Choose where to move this item:
+                        Choose where to move this item
                     </div>
                     <div class="details-actions">
                         <select class="status-select" id="detailsStatusSelect">
@@ -517,6 +522,7 @@ class MediaTracker {
                             <option value="alone" ${(item.watch_preference || 'alone') === 'alone' ? 'selected' : ''}>Watch Alone</option>
                             <option value="partner" ${(item.watch_preference || 'alone') === 'partner' ? 'selected' : ''}>Watch with Partner</option>
                         </select>
+
                         <button class="remove-btn" onclick="mediaTracker.removeMedia(${item.id}, '${item.media_type}')">
                             <i class="fas fa-trash"></i> Remove
                         </button>
@@ -533,6 +539,11 @@ class MediaTracker {
         // Add event listener for watch preference change
         document.getElementById('detailsWatchPreferenceSelect').addEventListener('change', (e) => {
             this.updateMediaWatchPreference(item.id, e.target.value);
+        });
+
+        // Add event listener for copy to user button
+        document.getElementById('copyToUserBtn').addEventListener('click', () => {
+            this.showCopyToUserModal(item);
         });
     }
 
@@ -626,7 +637,7 @@ class MediaTracker {
 
                     <div class="add-instructions green">
                         <i class="fas fa-info-circle"></i>
-                        Choose where to add this item:
+                        Choose where to add this item
                     </div>
                     <div class="details-actions">
                         <select class="status-select" id="searchItemStatusSelect">
@@ -1298,6 +1309,204 @@ class MediaTracker {
             });
         } catch (error) {
             console.error('Error saving preferences:', error);
+        }
+    }
+
+    // Copy to User functionality
+    async showCopyToUserModal(item) {
+        const modal = document.getElementById('copyToUserModal');
+        this.currentItemToCopy = item;
+        
+        // Show item preview
+        this.renderCopyItemPreview(item);
+        
+        // Load and show available users
+        await this.loadUsersForCopy();
+        
+        // Setup modal event listeners
+        this.setupCopyToUserListeners();
+        
+        // Show modal
+        modal.classList.add('active');
+    }
+
+    renderCopyItemPreview(item) {
+        const preview = document.getElementById('copyItemPreview');
+        const posterUrl = item.poster_path ? `${this.imageBaseUrl}${item.poster_path}` : null;
+        const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+        const releaseDate = item.release_date ? new Date(item.release_date).getFullYear() : 'N/A';
+        
+        preview.innerHTML = `
+            <div class="copy-item-card">
+                <div class="copy-item-poster">
+                    ${posterUrl ? `<img src="${posterUrl}" alt="${item.title}">` : '<i class="fas fa-film"></i>'}
+                </div>
+                <div class="copy-item-info">
+                    <h3>${item.title}</h3>
+                    <div class="copy-item-meta">
+                        <span>${releaseDate}</span>
+                        <span>${item.media_type === 'movie' ? 'Movie' : 'TV Show'}</span>
+                        <span>★ ${rating}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async loadUsersForCopy() {
+        try {
+            const response = await fetch(`${this.baseUrl}/users`);
+            const users = await response.json();
+            
+            // Filter out current user
+            const otherUsers = users.filter(user => user.id !== this.currentUser.id);
+            
+            const usersList = document.getElementById('copyUsersList');
+            
+            if (otherUsers.length === 0) {
+                usersList.innerHTML = '<div class="no-users-message">No other users found. Create another user first!</div>';
+                return;
+            }
+            
+            usersList.innerHTML = otherUsers.map(user => `
+                <div class="copy-user-card" data-user-id="${user.id}">
+                    <i class="fas fa-user"></i>
+                    <span>${user.name}</span>
+                </div>
+            `).join('');
+            
+        } catch (error) {
+            console.error('Error loading users:', error);
+            document.getElementById('copyUsersList').innerHTML = '<div class="error-message">Error loading users. Please try again.</div>';
+        }
+    }
+
+    setupCopyToUserListeners() {
+        // Close modal listeners
+        document.getElementById('closeCopyToUserModal').onclick = () => {
+            this.closeCopyToUserModal();
+        };
+        
+        document.getElementById('copyToUserModal').onclick = (e) => {
+            if (e.target.id === 'copyToUserModal') {
+                this.closeCopyToUserModal();
+            }
+        };
+
+        // User selection
+        document.getElementById('copyUsersList').onclick = (e) => {
+            const userCard = e.target.closest('.copy-user-card');
+            if (userCard) {
+                // Remove active class from all cards
+                document.querySelectorAll('.copy-user-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+                
+                // Add active class to selected card
+                userCard.classList.add('active');
+                
+                // Store selected user and show options
+                this.selectedCopyUserId = parseInt(userCard.dataset.userId);
+                this.selectedCopyUserName = userCard.querySelector('span').textContent;
+                
+                // Show copy options
+                document.getElementById('copyOptions').style.display = 'block';
+            }
+        };
+
+        // Cancel button
+        document.getElementById('cancelCopyBtn').onclick = () => {
+            this.closeCopyToUserModal();
+        };
+
+        // Confirm copy button
+        document.getElementById('confirmCopyBtn').onclick = () => {
+            this.confirmCopyToUser();
+        };
+    }
+
+    closeCopyToUserModal() {
+        const modal = document.getElementById('copyToUserModal');
+        modal.classList.remove('active');
+        
+        // Reset state
+        this.currentItemToCopy = null;
+        this.selectedCopyUserId = null;
+        this.selectedCopyUserName = null;
+        document.getElementById('copyOptions').style.display = 'none';
+        
+        // Clear selections
+        document.querySelectorAll('.copy-user-card').forEach(card => {
+            card.classList.remove('active');
+        });
+    }
+
+    async confirmCopyToUser() {
+        if (!this.currentItemToCopy || !this.selectedCopyUserId) {
+            alert('Please select a user first.');
+            return;
+        }
+
+        const selectedStatus = document.getElementById('copyStatusSelect').value;
+        const selectedPreference = document.getElementById('copyPreferenceSelect').value;
+        
+        const confirmBtn = document.getElementById('confirmCopyBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Copying...';
+
+        try {
+            // Check if item already exists in target user's library
+            const checkResponse = await fetch(`${this.baseUrl}/users/${this.selectedCopyUserId}/media`);
+            const targetUserMedia = await checkResponse.json();
+            
+            const existsInTarget = targetUserMedia.find(m => 
+                m.tmdb_id === this.currentItemToCopy.id && 
+                m.media_type === this.currentItemToCopy.media_type
+            );
+            
+            if (existsInTarget) {
+                alert(`This item already exists in ${this.selectedCopyUserName}'s library!`);
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Item';
+                return;
+            }
+
+            // Create the media item for the target user
+            const mediaItem = {
+                tmdb_id: this.currentItemToCopy.id,
+                media_type: this.currentItemToCopy.media_type,
+                title: this.currentItemToCopy.title,
+                poster_path: this.currentItemToCopy.poster_path,
+                vote_average: this.currentItemToCopy.vote_average,
+                overview: this.currentItemToCopy.overview,
+                release_date: this.currentItemToCopy.release_date,
+                runtime: this.currentItemToCopy.runtime,
+                seasons: this.currentItemToCopy.seasons,
+                status: selectedStatus,
+                watch_preference: selectedPreference
+            };
+
+            const response = await fetch(`${this.baseUrl}/users/${this.selectedCopyUserId}/media`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(mediaItem)
+            });
+
+            if (response.ok) {
+                alert(`Successfully copied "${this.currentItemToCopy.title}" to ${this.selectedCopyUserName}'s library!`);
+                this.closeCopyToUserModal();
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Failed to copy item');
+            }
+        } catch (error) {
+            console.error('Error copying item:', error);
+            alert('Failed to copy item. Please try again.');
+        } finally {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Item';
         }
     }
 }
