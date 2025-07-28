@@ -339,6 +339,56 @@ class MediaTracker {
         document.getElementById('mediaDetailsModal').classList.remove('active');
     }
 
+    async showSearchItemDetails(item) {
+        // Check if item already exists in user's library
+        const existingItem = this.media.find(m => m.id === item.id && m.media_type === item.media_type);
+        
+        if (existingItem) {
+            // If it exists, show the regular details modal
+            this.showMediaDetails(existingItem);
+            return;
+        }
+
+        // Close search modal and show details modal
+        document.getElementById('addMediaModal').classList.remove('active');
+        document.getElementById('mediaDetailsModal').classList.add('active');
+        const detailsContent = document.getElementById('detailsContent');
+
+        // Show loading state
+        detailsContent.innerHTML = '<div class="loading">Loading details...</div>';
+
+        try {
+            // Fetch detailed information
+            const [detailsResponse, creditsResponse] = await Promise.all([
+                fetch(`${this.baseUrl}/media/${item.media_type}/${item.id}`),
+                fetch(`${this.baseUrl}/media/${item.media_type}/${item.id}/credits`)
+            ]);
+
+            const details = await detailsResponse.json();
+            const credits = await creditsResponse.json();
+
+            // Create a temporary item object with the fetched details
+            const itemWithDetails = {
+                id: item.id,
+                media_type: item.media_type,
+                title: item.title || item.name,
+                poster_path: item.poster_path,
+                vote_average: item.vote_average || 0,
+                overview: item.overview,
+                release_date: item.release_date || item.first_air_date,
+                runtime: details.runtime || (details.episode_run_time && details.episode_run_time[0]) || 0,
+                seasons: details.number_of_seasons || 0,
+                status: 'to-watch', // Default status for new items
+                watch_preference: 'all' // Default watch preference
+            };
+
+            this.renderSearchItemDetails(itemWithDetails, details, credits);
+        } catch (error) {
+            console.error('Error fetching details:', error);
+            detailsContent.innerHTML = '<div class="loading">Error loading details. Please try again.</div>';
+        }
+    }
+
     async showMediaDetails(item) {
         document.getElementById('mediaDetailsModal').classList.add('active');
         const detailsContent = document.getElementById('detailsContent');
@@ -451,6 +501,10 @@ class MediaTracker {
                     </div>
                     ` : ''}
 
+                    <div class="move-instructions orange">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Choose where to move this item:
+                    </div>
                     <div class="details-actions">
                         <select class="status-select" id="detailsStatusSelect">
                             <option value="to-watch" ${item.status === 'to-watch' ? 'selected' : ''}>To Watch</option>
@@ -480,6 +534,184 @@ class MediaTracker {
         document.getElementById('detailsWatchPreferenceSelect').addEventListener('change', (e) => {
             this.updateMediaWatchPreference(item.id, e.target.value);
         });
+    }
+
+    renderSearchItemDetails(item, details, credits) {
+        const detailsContent = document.getElementById('detailsContent');
+        const posterUrl = item.poster_path ? `${this.imageBaseUrl}${item.poster_path}` : null;
+        const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+        const releaseDate = item.release_date ? new Date(item.release_date).getFullYear() : 'N/A';
+
+        // Get genres
+        const genres = details.genres ? details.genres.map(g => g.name) : [];
+
+        // Get cast (first 10 members)
+        const cast = credits.cast ? credits.cast.slice(0, 10).map(c => c.name) : [];
+
+        // Format runtime for movies
+        const duration = item.media_type === 'movie' && details.runtime ?
+            this.formatDuration(details.runtime) : null;
+
+        // Get additional info based on media type
+        let additionalInfo = '';
+        if (item.media_type === 'tv') {
+            const seasons = details.number_of_seasons || 'N/A';
+            const episodes = details.number_of_episodes || 'N/A';
+            const status = details.status || 'N/A';
+            additionalInfo = `
+                <div class="details-meta-item">
+                    <i class="fas fa-tv"></i>
+                    ${seasons} Seasons, ${episodes} Episodes
+                </div>
+                <div class="details-meta-item">
+                    <i class="fas fa-info-circle"></i>
+                    ${status}
+                </div>
+            `;
+        } else if (duration) {
+            additionalInfo = `
+                <div class="details-meta-item">
+                    <i class="fas fa-clock"></i>
+                    ${duration}
+                </div>
+            `;
+        }
+
+        detailsContent.innerHTML = `
+            <div class="details-content">
+                <div class="details-poster">
+                    ${posterUrl ?
+                `<img src="${posterUrl}" alt="${item.title}">` :
+                '<div class="placeholder"><i class="fas fa-film"></i></div>'
+            }
+                </div>
+                <div class="details-info">
+                    <h1 class="details-title">${item.title}</h1>
+                    
+                    <div class="details-meta">
+                        <div class="details-meta-item">
+                            <i class="fas fa-calendar"></i>
+                            ${releaseDate}
+                        </div>
+                        <div class="details-meta-item">
+                            <i class="fas fa-film"></i>
+                            ${item.media_type === 'movie' ? 'Movie' : 'TV Show'}
+                        </div>
+                        ${additionalInfo}
+                        <div class="details-rating">
+                            <i class="fas fa-star"></i>
+                            ${rating}/10
+                        </div>
+                    </div>
+
+                    ${genres.length > 0 ? `
+                    <div class="details-genres">
+                        ${genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
+                    </div>
+                    ` : ''}
+
+                    <div class="details-overview">
+                        <h3>Overview</h3>
+                        <p>${item.overview || 'No description available.'}</p>
+                    </div>
+
+                    ${cast.length > 0 ? `
+                    <div class="details-cast">
+                        <h3>Cast</h3>
+                        <div class="cast-list">
+                            ${cast.map(actor => `<span class="cast-member">${actor}</span>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="add-instructions green">
+                        <i class="fas fa-info-circle"></i>
+                        Choose where to add this item:
+                    </div>
+                    <div class="details-actions">
+                        <select class="status-select" id="searchItemStatusSelect">
+                            <option value="to-watch" ${item.status === 'to-watch' ? 'selected' : ''}>To Watch</option>
+                            <option value="in-progress" ${item.status === 'in-progress' ? 'selected' : ''}>Shortlist</option>
+                            <option value="watching" ${item.status === 'watching' ? 'selected' : ''}>Watching</option>
+                            <option value="waiting" ${item.status === 'waiting' ? 'selected' : ''}>Waiting for Season</option>
+                            <option value="watched" ${item.status === 'watched' ? 'selected' : ''}>Watched</option>
+                        </select>
+                        <select class="status-select" id="searchItemWatchPreferenceSelect">
+                            <option value="all" ${(item.watch_preference || 'all') === 'all' ? 'selected' : ''}>All</option>
+                            <option value="alone" ${(item.watch_preference || 'all') === 'alone' ? 'selected' : ''}>Watch Alone</option>
+                            <option value="partner" ${(item.watch_preference || 'all') === 'partner' ? 'selected' : ''}>Watch with Partner</option>
+                        </select>
+                        <button class="add-btn" id="addSearchItemBtn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add event listener for the Add button
+        document.getElementById('addSearchItemBtn').addEventListener('click', () => {
+            const selectedStatus = document.getElementById('searchItemStatusSelect').value;
+            const selectedWatchPreference = document.getElementById('searchItemWatchPreferenceSelect').value;
+            
+            // Update the item with selected values
+            item.status = selectedStatus;
+            item.watch_preference = selectedWatchPreference;
+            
+            this.addMediaFromDetails(item);
+        });
+    }
+
+    async addMediaFromDetails(item) {
+        // Check if already exists (shouldn't happen, but safety check)
+        if (this.media.find(m => m.id === item.id && m.media_type === item.media_type)) {
+            alert('This item is already in your tracker!');
+            return;
+        }
+
+        const mediaItem = {
+            tmdb_id: item.id,
+            media_type: item.media_type,
+            title: item.title,
+            poster_path: item.poster_path,
+            vote_average: item.vote_average,
+            overview: item.overview,
+            release_date: item.release_date,
+            runtime: item.runtime,
+            seasons: item.seasons,
+            status: item.status,
+            watch_preference: item.watch_preference
+        };
+
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(mediaItem)
+            });
+
+            if (response.ok) {
+                // Add to local array for immediate UI update
+                this.media.push({
+                    id: item.id,
+                    ...mediaItem
+                });
+                this.renderMedia();
+                this.updateCounts();
+                
+                // Close both modals
+                this.closeDetailsModal();
+                this.closeModal();
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Failed to add media');
+            }
+        } catch (error) {
+            console.error('Error adding media:', error);
+            alert('Failed to add media. Please try again.');
+        }
     }
 
     async removeMedia(mediaId, mediaType) {
@@ -559,7 +791,7 @@ class MediaTracker {
             const posterPath = item.poster_path ? `${this.imageBaseUrl}${item.poster_path}` : null;
 
             return `
-                <div class="search-result" onclick="mediaTracker.addMedia(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                <div class="search-result" onclick="mediaTracker.showSearchItemDetails(${JSON.stringify(item).replace(/"/g, '&quot;')})">
                     <div class="search-result-poster">
                         ${posterPath ? `<img src="${posterPath}" alt="${title}">` : '<i class="fas fa-film"></i>'}
                     </div>
