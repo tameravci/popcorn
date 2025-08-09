@@ -18,7 +18,7 @@ class MediaTracker {
     async showUserSelection() {
         const modal = document.getElementById('userSelectionModal');
         modal.classList.add('active');
-        
+
         await this.loadExistingUsers();
         this.setupUserSelectionListeners();
     }
@@ -27,9 +27,9 @@ class MediaTracker {
         try {
             const response = await fetch(`${this.baseUrl}/users`);
             const users = await response.json();
-            
+
             const existingUsersContainer = document.getElementById('existingUsers');
-            
+
             if (users.length === 0) {
                 existingUsersContainer.innerHTML = '<div class="no-users-message">No users found. Create your first user below!</div>';
             } else {
@@ -79,7 +79,7 @@ class MediaTracker {
     async createNewUser() {
         const nameInput = document.getElementById('newUserName');
         const name = nameInput.value.trim();
-        
+
         if (!name) {
             alert('Please enter a name');
             return;
@@ -116,16 +116,16 @@ class MediaTracker {
 
     async selectUser(userId, userName) {
         this.currentUser = { id: userId, name: userName };
-        
+
         // Hide user selection modal
         document.getElementById('userSelectionModal').classList.remove('active');
-        
+
         // Update header to show current user
         document.querySelector('.header h1').innerHTML = `🍿 Popcorn - ${userName}`;
-        
+
         // Load user's media and preferences
         await this.loadUserData();
-        
+
         // Initialize the rest of the app
         this.renderMedia();
         this.updateCounts();
@@ -135,18 +135,18 @@ class MediaTracker {
         // Clear current user data
         this.currentUser = null;
         this.media = [];
-        
+
         // Clear the UI
         this.renderMedia();
         this.updateCounts();
-        
+
         // Reset header
         document.querySelector('.header h1').innerHTML = `🍿 Popcorn`;
-        
+
         // Clear any open modals
         document.getElementById('addMediaModal').classList.remove('active');
         document.getElementById('mediaDetailsModal').classList.remove('active');
-        
+
         // Show user selection modal again
         this.showUserSelection();
     }
@@ -160,7 +160,7 @@ class MediaTracker {
             // Load user preferences
             const prefsResponse = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/preferences`);
             const preferences = await prefsResponse.json();
-            
+
             // Apply preferences to UI
             this.applyUserPreferences(preferences);
         } catch (error) {
@@ -181,7 +181,7 @@ class MediaTracker {
         watchPrefButtons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.value === preferences.default_watch_preference);
         });
-        
+
         // Apply filters to show the correct content
         this.applyFilters();
     }
@@ -247,6 +247,9 @@ class MediaTracker {
 
         // Button-based filters
         this.setupButtonFilters();
+
+        // Netflix import functionality
+        this.setupNetflixImportListeners();
 
         // Switch user button
         const switchUserBtn = document.getElementById('switchUserBtn');
@@ -342,7 +345,7 @@ class MediaTracker {
     async showSearchItemDetails(item) {
         // Check if item already exists in user's library
         const existingItem = this.media.find(m => m.id === item.id && m.media_type === item.media_type);
-        
+
         if (existingItem) {
             // If it exists, show the regular details modal
             this.showMediaDetails(existingItem);
@@ -664,11 +667,11 @@ class MediaTracker {
         document.getElementById('addSearchItemBtn').addEventListener('click', () => {
             const selectedStatus = document.getElementById('searchItemStatusSelect').value;
             const selectedWatchPreference = document.getElementById('searchItemWatchPreferenceSelect').value;
-            
+
             // Update the item with selected values
             item.status = selectedStatus;
             item.watch_preference = selectedWatchPreference;
-            
+
             this.addMediaFromDetails(item);
         });
     }
@@ -711,7 +714,7 @@ class MediaTracker {
                 });
                 this.renderMedia();
                 this.updateCounts();
-                
+
                 // Close both modals
                 this.closeDetailsModal();
                 this.closeModal();
@@ -750,15 +753,15 @@ class MediaTracker {
     handleSearchInput(query) {
         // Clear any existing timeout
         clearTimeout(this.searchTimeout);
-        
+
         const resultsContainer = document.getElementById('searchResults');
-        
+
         // Clear results if query is too short
         if (query.length < 3) {
             resultsContainer.innerHTML = '';
             return;
         }
-        
+
         // Set new timeout for debounced search
         this.searchTimeout = setTimeout(() => {
             this.searchMedia();
@@ -894,17 +897,17 @@ class MediaTracker {
         if (originalStatus !== newStatus) {
             // Remove the item from its current position
             this.media.splice(originalIndex, 1);
-            
+
             // Update the status
             media.status = newStatus;
-            
+
             // Add it to the end of the array (so it appears at the end of the destination column)
             this.media.push(media);
         } else {
             // Same column - just update status (no reordering needed)
             media.status = newStatus;
         }
-        
+
         // Immediately update the UI (optimistic update)
         this.renderMedia();
         this.updateCounts();
@@ -1057,11 +1060,11 @@ class MediaTracker {
                 mobileListView.appendChild(mobileItem);
             }
         });
-        
+
         // Debug: Check if mobile list view is visible and force show it on mobile
         if (mobileListView) {
             const styles = window.getComputedStyle(mobileListView);
-            
+
 
         }
     }
@@ -1292,10 +1295,10 @@ class MediaTracker {
 
     async saveUserPreferences() {
         if (!this.currentUser) return;
-        
+
         const cardSize = this.getActiveFilterValue('cardSize');
         const defaultWatchPreference = this.getActiveFilterValue('watchPreference');
-        
+
         try {
             await fetch(`${this.baseUrl}/users/${this.currentUser.id}/preferences`, {
                 method: 'PUT',
@@ -1316,16 +1319,16 @@ class MediaTracker {
     async showCopyToUserModal(item) {
         const modal = document.getElementById('copyToUserModal');
         this.currentItemToCopy = item;
-        
+
         // Show item preview
         this.renderCopyItemPreview(item);
-        
+
         // Load and show available users
         await this.loadUsersForCopy();
-        
+
         // Setup modal event listeners
         this.setupCopyToUserListeners();
-        
+
         // Show modal
         modal.classList.add('active');
     }
@@ -1335,7 +1338,7 @@ class MediaTracker {
         const posterUrl = item.poster_path ? `${this.imageBaseUrl}${item.poster_path}` : null;
         const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
         const releaseDate = item.release_date ? new Date(item.release_date).getFullYear() : 'N/A';
-        
+
         preview.innerHTML = `
             <div class="copy-item-card">
                 <div class="copy-item-poster">
@@ -1357,24 +1360,24 @@ class MediaTracker {
         try {
             const response = await fetch(`${this.baseUrl}/users`);
             const users = await response.json();
-            
+
             // Filter out current user
             const otherUsers = users.filter(user => user.id !== this.currentUser.id);
-            
+
             const usersList = document.getElementById('copyUsersList');
-            
+
             if (otherUsers.length === 0) {
                 usersList.innerHTML = '<div class="no-users-message">No other users found. Create another user first!</div>';
                 return;
             }
-            
+
             usersList.innerHTML = otherUsers.map(user => `
                 <div class="copy-user-card" data-user-id="${user.id}">
                     <i class="fas fa-user"></i>
                     <span>${user.name}</span>
                 </div>
             `).join('');
-            
+
         } catch (error) {
             console.error('Error loading users:', error);
             document.getElementById('copyUsersList').innerHTML = '<div class="error-message">Error loading users. Please try again.</div>';
@@ -1386,7 +1389,7 @@ class MediaTracker {
         document.getElementById('closeCopyToUserModal').onclick = () => {
             this.closeCopyToUserModal();
         };
-        
+
         document.getElementById('copyToUserModal').onclick = (e) => {
             if (e.target.id === 'copyToUserModal') {
                 this.closeCopyToUserModal();
@@ -1401,14 +1404,14 @@ class MediaTracker {
                 document.querySelectorAll('.copy-user-card').forEach(card => {
                     card.classList.remove('active');
                 });
-                
+
                 // Add active class to selected card
                 userCard.classList.add('active');
-                
+
                 // Store selected user and show options
                 this.selectedCopyUserId = parseInt(userCard.dataset.userId);
                 this.selectedCopyUserName = userCard.querySelector('span').textContent;
-                
+
                 // Show copy options
                 document.getElementById('copyOptions').style.display = 'block';
             }
@@ -1428,13 +1431,13 @@ class MediaTracker {
     closeCopyToUserModal() {
         const modal = document.getElementById('copyToUserModal');
         modal.classList.remove('active');
-        
+
         // Reset state
         this.currentItemToCopy = null;
         this.selectedCopyUserId = null;
         this.selectedCopyUserName = null;
         document.getElementById('copyOptions').style.display = 'none';
-        
+
         // Clear selections
         document.querySelectorAll('.copy-user-card').forEach(card => {
             card.classList.remove('active');
@@ -1449,7 +1452,7 @@ class MediaTracker {
 
         const selectedStatus = document.getElementById('copyStatusSelect').value;
         const selectedPreference = document.getElementById('copyPreferenceSelect').value;
-        
+
         const confirmBtn = document.getElementById('confirmCopyBtn');
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Copying...';
@@ -1458,12 +1461,12 @@ class MediaTracker {
             // Check if item already exists in target user's library
             const checkResponse = await fetch(`${this.baseUrl}/users/${this.selectedCopyUserId}/media`);
             const targetUserMedia = await checkResponse.json();
-            
-            const existsInTarget = targetUserMedia.find(m => 
-                m.tmdb_id === this.currentItemToCopy.id && 
+
+            const existsInTarget = targetUserMedia.find(m =>
+                m.tmdb_id === this.currentItemToCopy.id &&
                 m.media_type === this.currentItemToCopy.media_type
             );
-            
+
             if (existsInTarget) {
                 alert(`This item already exists in ${this.selectedCopyUserName}'s library!`);
                 confirmBtn.disabled = false;
@@ -1507,6 +1510,414 @@ class MediaTracker {
         } finally {
             confirmBtn.disabled = false;
             confirmBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Item';
+        }
+    }
+
+    
+
+    // Netflix Import functionality
+    setupNetflixImportListeners() {
+        const importBtn = document.getElementById('importNetflixBtn');
+        const modal = document.getElementById('importNetflixModal');
+        const closeBtn = document.getElementById('closeImportModal');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('netflixFileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const processBtn = document.getElementById('processImportBtn');
+        const cancelBtn = document.getElementById('cancelImportBtn');
+
+        // Open modal
+        importBtn.addEventListener('click', () => {
+            modal.classList.add('active');
+        });
+
+        // Close modal
+        closeBtn.addEventListener('click', () => {
+            this.closeNetflixImportModal();
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            this.closeNetflixImportModal();
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeNetflixImportModal();
+            }
+        });
+
+        // File upload button
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.handleNetflixFileSelection(file);
+            }
+        });
+
+        // Process import button
+        processBtn.addEventListener('click', () => {
+            this.processNetflixImport();
+        });
+    }
+
+    closeNetflixImportModal() {
+        const modal = document.getElementById('importNetflixModal');
+        const fileInput = document.getElementById('netflixFileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const processBtn = document.getElementById('processImportBtn');
+
+        modal.classList.remove('active');
+        fileInput.value = '';
+        fileInfo.classList.remove('active');
+        fileInfo.innerHTML = '';
+        processBtn.disabled = true;
+    }
+
+    handleNetflixFileSelection(file) {
+        const fileInfo = document.getElementById('fileInfo');
+        const processBtn = document.getElementById('processImportBtn');
+
+        // Validate file type
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            alert('Please select a CSV file.');
+            return;
+        }
+
+        // Show file info
+        const fileSize = (file.size / 1024).toFixed(1);
+        fileInfo.innerHTML = `
+            <div class="file-name">
+                <i class="fas fa-file-csv"></i>
+                ${file.name}
+            </div>
+            <div class="file-details">
+                Size: ${fileSize} KB | Last modified: ${new Date(file.lastModified).toLocaleDateString()}
+            </div>
+        `;
+        fileInfo.classList.add('active');
+        processBtn.disabled = false;
+    }
+
+    async processNetflixImport() {
+        const fileInput = document.getElementById('netflixFileInput');
+        const processBtn = document.getElementById('processImportBtn');
+
+        if (!fileInput.files[0]) {
+            alert('Please select a file first.');
+            return;
+        }
+
+        processBtn.disabled = true;
+        processBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        try {
+            const file = fileInput.files[0];
+            const csvText = await this.readFileAsText(file);
+            const netflixData = this.parseNetflixCSV(csvText);
+
+            if (netflixData.length === 0) {
+                alert('No 2025 viewing history found in the CSV file.');
+                return;
+            }
+
+            // Show the processed results in the modal
+            this.showNetflixImportResults(netflixData);
+
+        } catch (error) {
+            console.error('Error processing Netflix import:', error);
+            alert('Failed to process Netflix import. Please try again.');
+        } finally {
+            processBtn.disabled = false;
+            processBtn.innerHTML = '<i class="fas fa-cog"></i> Import History';
+        }
+    }
+
+    readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(e);
+            reader.readAsText(file);
+        });
+    }
+
+    parseNetflixCSV(csvText) {
+        const lines = csvText.split('\n');
+        const titleCounts = {};
+
+        // Skip header row and process data
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            // Find the last comma to split title and date
+            const lastCommaIndex = line.lastIndexOf(',');
+            if (lastCommaIndex === -1) continue;
+
+            let title = line.substring(0, lastCommaIndex).trim();
+            const dateStr = line.substring(lastCommaIndex + 1).trim();
+
+            // Remove quotes from title if present
+            if (title.startsWith('"') && title.endsWith('"')) {
+                title = title.slice(1, -1);
+            }
+
+            const year = new Date(dateStr).getFullYear();
+            //console.log(year === 2025)
+
+            if (year != 2025) continue;
+
+            // Extract base title (remove season/episode info after ":")
+            const colonIndex = title.indexOf(':');
+            if (colonIndex !== -1) {
+                title = title.substring(0, colonIndex).trim();
+            }
+
+            // Skip empty titles
+            if (!title) continue;
+
+            // Count occurrences
+            if (titleCounts[title]) {
+                titleCounts[title]++;
+            } else {
+                titleCounts[title] = 1;
+            }
+        }
+
+        // Convert to array and sort by count (descending)
+        return Object.entries(titleCounts)
+            .map(([title, count]) => ({ title, count }))
+            .sort((a, b) => b.count - a.count);
+    }
+
+    showNetflixImportResults(netflixData) {
+        const modalBody = document.querySelector('#importNetflixModal .modal-body');
+
+        modalBody.innerHTML = `
+            <div class="netflix-results">
+                <h3>Netflix Viewing History (2025)</h3>
+                <p class="results-summary">Found ${netflixData.length} unique titles from your 2025 viewing history</p>
+                
+                <div class="netflix-title-item netflix-header">
+                    <div class="title-checkbox">
+                        <input type="checkbox" id="selectAllNetflix" title="Select/Deselect All" checked>
+                        <label for="selectAllNetflix">Select all</label>
+                    </div>
+                </div>
+                <div class="netflix-titles-list">
+                    ${netflixData.map((item, index) => `
+                        <div class="netflix-title-item">
+                            <div class="title-checkbox">
+                                <input type="checkbox" id="netflix-${index}" class="netflix-checkbox" data-title="${item.title.replace(/"/g, '&quot;')}" checked>
+                            </div>
+                            <div class="title-info">
+                                <div class="title-name">${item.title}</div>
+                                <div class="title-count">${item.count} viewing${item.count > 1 ? 's' : ''}</div>
+                            </div>
+                            <div class="title-status">
+                                <select class="status-select netflix-status-select" id="netflix-status-${index}">
+                                    <option value="to-watch">To Watch</option>
+                                    <option value="in-progress">Shortlist</option>
+                                    <option value="watching">Watching</option>
+                                    <option value="waiting">Waiting for Season</option>
+                                    <option value="watched" selected>Watched</option>
+                                </select>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="netflix-actions">
+                    <div class="import-controls">
+                        <button id="addSelectedNetflix" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Selected
+                        </button>
+                        <button id="backToUpload" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Upload
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Setup event listeners for the results view
+        this.setupNetflixResultsListeners();
+    }
+
+    setupNetflixResultsListeners() {
+        // Select/Deselect all buttons
+        document.getElementById('selectAllNetflix').addEventListener('change', (e) => {
+            document.querySelectorAll('.netflix-checkbox').forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
+
+        // Back to upload button
+        document.getElementById('backToUpload').addEventListener('click', () => {
+            this.resetNetflixImportModal();
+        });
+
+        // Add selected button
+        document.getElementById('addSelectedNetflix').addEventListener('click', () => {
+            this.addSelectedNetflixTitles();
+        });
+    }
+
+    resetNetflixImportModal() {
+        const modalBody = document.querySelector('#importNetflixModal .modal-body');
+
+        modalBody.innerHTML = `
+            <div class="import-instructions">
+                <p>To import your Netflix viewing history:</p>
+                <ol>
+                    <li>Login to Netflix and go to <a href="https://www.netflix.com/settings/viewed#:~:text=Hide%20all-,Download%20all,-Questions%3F%20Contact%20us" target="_blank">your viewing activity settings</a></li>
+                    <li>Click the "Download all" button at the bottom</li>
+                    <li>Upload the downloaded CSV file below</li>
+                </ol>
+            </div>
+            <div class="file-upload-container">
+                <input type="file" id="netflixFileInput" accept=".csv" style="display: none;">
+                <button id="uploadBtn" class="upload-btn">
+                    <i class="fas fa-upload"></i> Choose CSV File
+                </button>
+                <div id="fileInfo" class="file-info"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="processImportBtn" class="btn btn-primary" disabled>
+                    <i class="fas fa-cog"></i> Import History
+                </button>
+                <button id="cancelImportBtn" class="btn btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        `;
+
+        // Re-setup the original listeners
+        this.setupNetflixImportListeners();
+    }
+
+    async addSelectedNetflixTitles() {
+        const selectedCheckboxes = document.querySelectorAll('.netflix-checkbox:checked');
+        const addBtn = document.getElementById('addSelectedNetflix');
+
+        if (selectedCheckboxes.length === 0) {
+            alert('Please select at least one title to add.');
+            return;
+        }
+
+        addBtn.disabled = true;
+        addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding Titles...';
+
+        let addedCount = 0;
+        let skippedCount = 0;
+
+        try {
+            for (const checkbox of selectedCheckboxes) {
+                const title = checkbox.dataset.title;
+                const status = checkbox.closest('.netflix-title-item').querySelector('.netflix-status-select').value;
+
+                // Check if already exists in user's library
+                const existingItem = this.media.find(m =>
+                    m.title.toLowerCase() === title.toLowerCase()
+                );
+
+                if (existingItem) {
+                    skippedCount++;
+                    continue;
+                }
+
+                // Try to find the title on TMDB
+                try {
+                    const searchResponse = await fetch(`${this.baseUrl}/search?query=${encodeURIComponent(title)}`);
+                    const searchData = await searchResponse.json();
+
+                    if (searchData.results && searchData.results.length > 0) {
+                        // Take the first result (most relevant)
+                        const item = searchData.results[0];
+
+                        // Get additional details
+                        let details = {};
+                        try {
+                            const detailsResponse = await fetch(`${this.baseUrl}/media/${item.media_type}/${item.id}`);
+                            details = await detailsResponse.json();
+                        } catch (error) {
+                            console.error('Error fetching details for:', title, error);
+                        }
+
+                        const mediaItem = {
+                            tmdb_id: item.id,
+                            media_type: item.media_type,
+                            title: item.title || item.name,
+                            poster_path: item.poster_path,
+                            vote_average: item.vote_average || 0,
+                            overview: item.overview,
+                            release_date: item.release_date || item.first_air_date,
+                            runtime: details.runtime || (details.episode_run_time && details.episode_run_time[0]) || 0,
+                            seasons: details.number_of_seasons || 0,
+                            status: status,
+                            watch_preference: 'all'
+                        };
+
+                        const response = await fetch(`${this.baseUrl}/users/${this.currentUser.id}/media`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(mediaItem)
+                        });
+
+                        if (response.ok) {
+                            // Add to local array for immediate UI update
+                            this.media.push({
+                                id: item.id,
+                                ...mediaItem
+                            });
+                            addedCount++;
+                        } else {
+                            console.error('Failed to add:', title);
+                            skippedCount++;
+                        }
+                    } else {
+                        console.log('No TMDB results found for:', title);
+                        skippedCount++;
+                    }
+                } catch (error) {
+                    console.error('Error searching for:', title, error);
+                    skippedCount++;
+                }
+
+                // Small delay to avoid overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Update UI
+            this.renderMedia();
+            this.updateCounts();
+
+            // Show results
+            let message = `Import completed!\n\n`;
+            message += `✅ Added: ${addedCount} titles\n`;
+            if (skippedCount > 0) {
+                message += `⚠️ Skipped: ${skippedCount} titles (already exist or not found on TMDB)`;
+            }
+
+            alert(message);
+
+            // Close modal
+            this.closeNetflixImportModal();
+
+        } catch (error) {
+            console.error('Error adding Netflix titles:', error);
+            alert('Failed to add some titles. Please try again.');
+        } finally {
+            addBtn.disabled = false;
+            addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Selected';
         }
     }
 }

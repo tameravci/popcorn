@@ -18,6 +18,9 @@
                 <button class="switch-user-btn" id="switchUserBtn" title="Switch User">
                     <i class="fas fa-user-friends"></i>
                 </button>
+                <button class="import-netflix-btn" id="importNetflixBtn">
+                    <i class="fas fa-download"></i> Import from Netflix
+                </button>
                 <button class="add-media-btn" id="addMediaBtn">
                     <i class="fas fa-plus"></i> Add Media
                 </button>
@@ -75,9 +78,8 @@
                             <label>Watch With</label>
                         </div>
                         <div class="button-group" data-filter="watchPreference">
-                            <button class="filter-btn active" data-value="all">All</button>
-                            <button class="filter-btn" data-value="alone">
-                                <i class="fas fa-user"></i> Alone
+                            <button class="filter-btn active" data-value="all">All</button <button class="filter-btn" data-value="alone">
+                            <i class="fas fa-user"></i> Alone
                             </button>
                             <button class="filter-btn" data-value="partner">
                                 <i class="fas fa-user-friends"></i> Partner
@@ -132,6 +134,42 @@
             <!-- Mobile List View -->
             <div class="mobile-list-view" id="mobileListView">
                 <!-- Mobile media items will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Netflix Modal -->
+    <div class="modal" id="importNetflixModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Import Netflix Viewing History</h2>
+                <button class="close-btn" id="closeImportModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="import-instructions">
+                    <p>To import your Netflix viewing history:</p>
+                    <ol>
+                        <li>Login to Netflix and go to <a href="https://www.netflix.com/settings/viewed#:~:text=Hide%20all-,Download%20all,-Questions%3F%20Contact%20us"
+                                target="_blank">your viewing activity settings</a></li>
+                        <li>Click the "Download all" button at the bottom</li>
+                        <li>Upload the downloaded CSV file below</li>
+                    </ol>
+                </div>
+                <div class="file-upload-container">
+                    <input type="file" id="netflixFileInput" accept=".csv" style="display: none;">
+                    <button id="uploadBtn" class="upload-btn">
+                        <i class="fas fa-upload"></i> Choose CSV File
+                    </button>
+                    <div id="fileInfo" class="file-info"></div>
+                </div>
+                <div class="modal-actions">
+                    <button id="processImportBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-cog"></i> Import History
+                    </button>
+                    <button id="cancelImportBtn" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     </div>
