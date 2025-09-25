@@ -2228,6 +2228,15 @@ loating Footer */
     opacity: 0.5;
 }
 
+.floating-footer a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.floating-footer a:hover {
+    text-decoration: underline;
+}
+
 /* Dark mode footer */
 @media (prefers-color-scheme: dark) {
     .floating-footer {
