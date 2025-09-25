@@ -330,4 +330,4 @@ def update_user_preferences(user_id):
     return jsonify({'message': 'Preferences updated successfully'})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=3000)
+    app.run(debug=True, port=(int(os.environ.get("PORT", 8080))), host='0.0.0.0')
