@@ -134,7 +134,7 @@ def search_media():
         return jsonify(data)
     except requests.RequestException as e:
         print(f"TMDB API Error: {e}")  # Debug log
-        return jsonify({'error': f'Failed to search media: {str(e)}'}), 500
+        return jsonify({'error': f'Failed to search media'}), 500
     except Exception as e:
         print(f"General Error: {e}")  # Debug log
         return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
